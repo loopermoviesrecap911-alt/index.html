@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RideSmart EV — Demo (All-in-one)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Simple Google font (optional) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN for charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#071022; --muted:#9aa5b1; --accent:#22c55e; --glass: rgba(255,255,255,0.02);
+      --glass-2: rgba(255,255,255,0.03);
+      font-family: "Inter",system-ui,Segoe UI,Roboto,Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#061021 0%, #071426 100%);color:#e6eef3;min-height:100vh}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;gap:18px}
+    .logo{display:flex;flex-direction:column}
+    .brand{font-weight:700;color:var(--accent);font-size:20px}
+    .tag{color:var(--muted);font-size:12px;margin-top:2px}
+    nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    .tab{background:var(--glass);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer;font-weight:600}
+    .tab.active{background:linear-gradient(90deg,#0d2b18,#072018); color: #dff8e6; box-shadow:0 6px 18px rgba(34,197,94,0.08)}
+    .grid{display:grid;grid-template-columns:1fr 400px;gap:18px;margin-top:20px}
+    .card{background:linear-gradient(180deg,var(--card),#071022);padding:18px;border-radius:14px;box-shadow:0 6px 30px rgba(2,6,23,0.6)}
+    .section-title{font-weight:700;margin-bottom:8px}
+    label{font-size:13px;color:var(--muted);display:block;margin-top:12px}
+    select,input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+    button.cta{background:linear-gradient(90deg,var(--accent),#16a34a);border:none;padding:11px 14px;border-radius:10px;font-weight:700;color:#05220f;cursor:pointer;margin-top:12px}
+    .muted{color:var(--muted);font-size:13px}
+    .fare-box{background:linear-gradient(90deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02));padding:12px;border-radius:10px;margin-top:12px;color:#dff8e6}
+    .line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
+    .big{font-weight:800;font-size:18px}
+    .small{font-size:13px;color:var(--muted)}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mini-card{background:var(--glass-2);padding:10px;border-radius:10px}
+    .driver-card{display:flex;gap:12px;align-items:center}
+    .avatar{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#0b1530,#08202a);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .pill{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:999px;font-size:12px}
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* Responsive */
+    @media (max-width:980px){
+      .grid{grid-template-columns:1fr; }
+      nav{order:2;width:100%;margin-top:8px}
+    }
+
+    /* small tables */
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .sm-btn{background:transparent;border:1px solid rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;color:var(--muted);cursor:pointer}
+    .danger{background:rgba(255,40,40,0.12);color:#ffdddd;padding:6px 8px;border-radius:8px;border:none}
+    .ok{background:rgba(34,197,94,0.12);color:#dff8e6;padding:6px 8px;border-radius:8px;border:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">
+        <div class="brand">RideSmart EV • Demo</div>
+        <div class="tag">Intercity + City • EV-first • Fleet P&L demo</div>
+      </div>
+
+      <nav id="nav">
+        <div class="tab active" data-tab="rider">Rider</div>
+        <div class="tab" data-tab="driver">Driver</div>
+        <div class="tab" data-tab="fleet">Fleet Owner</div>
+        <div class="tab" data-tab="admin">Admin</div>
+      </nav>
+    </header>
+
+    <div class="grid">
+      <!-- Left: main flows -->
+      <div>
+        <!-- RIDER PANEL -->
+        <div class="card" id="panel-rider">
+          <div class="section-title">Book a Ride — Ganganagar hub</div>
+          <div class="small muted">Quick intercity booking + transparent EV cost breakdown</div>
+
+          <label>Pickup</label>
+          <select id="pickupSelect"><option>Ganganagar</option></select>
+
+          <label>Drop</label>
+          <select id="dropSelect">
+            <option value="Jaipur">Jaipur (550 km)</option>
+            <option value="Bikaner">Bikaner (200 km)</option>
+            <option value="Delhi">Delhi (420 km)</option>
+          </select>
+
+          <div class="two-col">
+            <div>
+              <label>Ride Type</label>
+              <select id="rideType">
+                <option value="oneway">One-way</option>
+                <option value="round">Round-trip</option>
+                <option value="shared">Shared (pool)</option>
+              </select>
+            </div>
+            <div>
+              <label>Charging</label>
+              <select id="chargingType">
+                <option value="paid">Paid (public) charging</option>
+                <option value="home">Home charging</option>
+              </select>
+            </div>
+          </div>
+
+          <label>Passengers</label>
+          <input id="passengers" type="number" min="1" value="1">
+
+          <label style="margin-top:12px">Prefer EV-only drivers?</label>
+          <select id="evOnly">
+            <option value="true">Yes (EV only)</option>
+            <option value="false">No preference</option>
+          </select>
+
+          <button class="cta" id="calcFareBtn">Get Fare Estimate</button>
+
+          <div id="fareResult" class="fare-box" style="display:none">
+            <div id="fareSummary"></div>
+            <div style="margin-top:8px" id="fareActions"></div>
+          </div>
+
+          <div id="bookingFlow" style="display:none;margin-top:12px">
+            <!-- Booking steps will be rendered here -->
+          </div>
+        </div>
+
+        <!-- LIVE TRIP / BOOKING AREA (reused) -->
+        <div class="card" id="panel-trip" style="margin-top:18px;display:none">
+          <div class="section-title">Active Trip</div>
+          <div id="activeTripInfo" class="muted">No active trip</div>
+          <div id="tripControls" style="margin-top:12px"></div>
+          <div style="margin-top:12px">
+            <div style="height:12px;background:#061820;border-radius:12px;overflow:hidden">
+              <div id="tripProgress" style="width:0%;height:12px;background:linear-gradient(90deg,var(--accent),#16a34a)"></div>
+            </div>
+            <div style="margin-top:8px" class="small muted">This is a simulated live trip for demo purposes.</div>
+          </div>
+        </div>
+
+        <!-- DRIVER PANEL -->
+        <div class="card" id="panel-driver" style="margin-top:18px;display:none">
+          <div class="section-title">Driver Dashboard (Demo drivers)</div>
+          <div class="driver-card">
+            <div class="avatar" id="drvAvatar">RS</div>
+            <div>
+              <div style="font-weight:700">Rahul Singh</div>
+              <div class="muted">Tata Nexon EV • Battery 82% • Rating 4.8</div>
+            </div>
+            <div style="margin-left:auto" class="pill" id="drvStatus">Online</div>
+          </div>
+
+          <div style="margin-top:12px" class="two-col">
+            <div class="mini-card">
+              <div class="small muted">Today's trips</div>
+              <div style="font-weight:800;font-size:18px" id="drvTripsCount">0</div>
+            </div>
+            <div class="mini-card">
+              <div class="small muted">Earnings (this session)</div>
+              <div style="font-weight:800;font-size:18px" id="drvEarnings">₹0</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Log an expense (charging / toll)</label>
+            <div class="two-col">
+              <input id="expType" placeholder="Type (charging/toll/other)" />
+              <input id="expAmount" placeholder="Amount ₹" type="number" />
+            </div>
+            <button class="sm-btn" id="logExpenseBtn" style="margin-top:8px">Log Expense</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="small muted">Expense history</div>
+            <table id="drvExpenseTable"><thead><tr><th>Type</th><th>Amt</th><th>When</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right column: controls, pricing, fleet -->
+      <div>
+        <div class="card">
+          <div class="section-title">Quick Pricing Controls (Admin)</div>
+          <div class="muted">Use Admin tab to persist settings. Quick toggles below only for demo session.</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+            <div>
+              <label>Base Fare (₹)</label>
+              <input id="ui_baseFare" type="number" value="50" />
+            </div>
+            <div>
+              <label>Per Km (₹)</label>
+              <input id="ui_perKm" type="number" value="10" />
+            </div>
+            <div>
+              <label>Per Min (₹)</label>
+              <input id="ui_perMin" type="number" value="1" />
+            </div>
+            <div>
+              <label>Platform %</label>
+              <input id="ui_commission" type="number" value="20" />
+            </div>
+            <div>
+              <label>EV home ₹/kWh</label>
+              <input id="ui_homeRate" type="number" value="10" />
+            </div>
+            <div>
+              <label>EV paid ₹/kWh</label>
+              <input id="ui_paidRate" type="number" value="27.5" step="0.1" />
+            </div>
+          </div>
+
+          <button class="cta" id="applyQuickPricing" style="margin-top:12px">Apply to Demo</button>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="section-title">Fleet Owner — Vehicles</div>
+          <div class="muted">Add vehicles to simulate fleet-level P&L</div>
+
+          <label>Vehicle name</label>
+          <input id="fleet_vehicle_name" placeholder="e.g. Nexon EV #101" />
+
+          <div class="two-col">
+            <div>
+              <label>EMI / month (₹)</label>
+              <input id="fleet_emi" type="number" value="4500" />
+            </div>
+            <div>
+              <label>Insurance / year (₹)</label>
+              <input id="fleet_ins" type="number" value="1200" />
+            </div>
+          </div>
+
+          <button class="sm-btn" id="addVehicleBtn" style="margin-top:10px">Add Vehicle</button>
+
+          <div style="margin-top:12px">
+            <table id="fleetTable">
+              <thead><tr><th>Vehicle</th><th>EMI/mo</th><th>Ins/yr</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="section-title">Earnings Chart</div>
+          <canvas id="earnChart" height="200"></canvas>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="section-title">Quick Tips</div>
+          <ul class="muted">
+            <li>On Rider: calculate fare → press Book to simulate driver assignment.</li>
+            <li>Switch Admin tab to persist platform rates and defaults.</li>
+            <li>Fleet panel shows per-vehicle P&L after trips are recorded.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer>Demo • Not a production app. Replace assumptions with real data before launch.</footer>
+  </div>
+
+<script>
+/* ========= Demo app state and defaults ========= */
+const defaultSettings = {
+  baseFare: 50,
+  perKm: 10,
+  perMin: 1,
+  commissionPercent: 20,
+  evConsumptionKwhPerKm: 0.18,
+  homeRate: 10,
+  paidRate: 27.5,
+  avgSpeedKmph: 60,
+  defaultDriverSalaryPerDay: 1500,
+  estimatedTripsPerMonth: 20,
+  estimatedWorkDaysPerMonth: 26
+};
+
+let settings = JSON.parse(localStorage.getItem('rs_settings') || 'null') || defaultSettings;
+let demoState = JSON.parse(localStorage.getItem('rs_demoState') || 'null') || {
+  vehicles: [], trips: [], driverExpenses: [], earningsSeries: []
+};
+
+/* ====== Utility helpers ====== */
+function money(x){ return '₹' + Number(x).toLocaleString(undefined,{maximumFractionDigits:2}) }
+function round2(x){ return Math.round(x*100)/100 }
+function saveState(){ localStorage.setItem('rs_demoState', JSON.stringify(demoState)); localStorage.setItem('rs_settings', JSON.stringify(settings)); }
+
+/* ====== UI initialization ====== */
+document.getElementById('ui_baseFare').value = settings.baseFare;
+document.getElementById('ui_perKm').value = settings.perKm;
+document.getElementById('ui_perMin').value = settings.perMin;
+document.getElementById('ui_commission').value = settings.commissionPercent;
+document.getElementById('ui_homeRate').value = settings.homeRate;
+document.getElementById('ui_paidRate').value = settings.paidRate;
+
+/* Apply quick pricing */
+document.getElementById('applyQuickPricing').onclick = ()=>{
+  settings.baseFare = Number(document.getElementById('ui_baseFare').value);
+  settings.perKm = Number(document.getElementById('ui_perKm').value);
+  settings.perMin = Number(document.getElementById('ui_perMin').value);
+  settings.commissionPercent = Number(document.getElementById('ui_commission').value);
+  settings.homeRate = Number(document.getElementById('ui_homeRate').value);
+  settings.paidRate = Number(document.getElementById('ui_paidRate').value);
+  saveState();
+  alert('Demo pricing applied to session. For persistent changes use Admin tab.');
+  renderChart();
+};
+
+/* Tab switching */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick = ()=> {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const tab = t.dataset.tab;
+    document.getElementById('panel-rider').style.display = tab==='rider' ? 'block': 'none';
+    document.getElementById('panel-driver').style.display = tab==='driver' ? 'block': 'none';
+    document.getElementById('panel-trip').style.display = tab==='rider' ? (activeTrip ? 'block' : 'none') : 'none';
+    document.getElementById('panel-fleet')?.remove?.(); // no-op
+    // show Fleet column remains; Admin is right column (use the nav only to focus; admin settings are right column)
+  }
+});
+
+/* ===== Pricing engine ===== */
+const routeMeta = {
+  Jaipur: { distance: 550, toll: 800 },
+  Bikaner: { distance: 200, toll: 200 },
+  Delhi: { distance: 420, toll: 600 }
+};
+
+function estimateFare(drop, chargingType, rideType, passengers){
+  const r = routeMeta[drop];
+  const dist = Number(r.distance);
+  const avgSpeed = settings.avgSpeedKmph;
+  const timeMin = (dist / avgSpeed) * 60; // minutes
+
+  const base = Number(settings.baseFare);
+  const perKm = Number(settings.perKm);
+  const perMin = Number(settings.perMin);
+
+  const distanceCharge = dist * perKm;
+  const timeCharge = timeMin * perMin;
+
+  const consumption = Number(settings.evConsumptionKwhPerKm);
+  const kWhNeeded = dist * consumption;
+
+  const elecRate = (chargingType === 'home') ? Number(settings.homeRate) : Number(settings.paidRate);
+  const chargingCost = kWhNeeded * elecRate;
+
+  // For shared rides, offer discount:
+  let discount = 0;
+  if(rideType === 'shared') discount = 0.25; // 25% discount for pooling
+  if(rideType === 'round') { /* add small round-trip discount */ discount = 0.1; }
+
+  // Fare base
+  let subtotal = base + distanceCharge + timeCharge + r.toll + chargingCost;
+  let discounted = subtotal * (1 - discount);
+
+  // Platform commission:
+  const commission = (settings.commissionPercent/100) * discounted;
+
+  // Owner costs allocations per trip (EMI & insurance allocated per trip using estimatedTripsPerMonth)
+  // We'll not assume driver salary is platform-wide; include sample default per-day for intercity trips
+  const emiPerTrip = 0; // filled externally if vehicle provided
+  const insurancePerTrip = 0;
+
+  return {
+    drop, dist, timeMin: round2(timeMin), base, distanceCharge: round2(distanceCharge),
+    timeCharge: round2(timeCharge), toll: r.toll, kWhNeeded: round2(kWhNeeded),
+    chargingCost: round2(chargingCost), subtotal: round2(subtotal),
+    discountPct: discount*100, totalFare: round2(discounted), commission: round2(commission),
+    ownerRevenue: round2(discounted - commission)
+  };
+}
+
+/* ===== Booking flow ===== */
+let activeTrip = null;
+
+document.getElementById('calcFareBtn').onclick = ()=>{
+  const drop = document.getElementById('dropSelect').value;
+  const chargingType = document.getElementById('chargingType').value === 'paid' ? 'paid' : 'home';
+  const rideType = document.getElementById('rideType').value;
+  const passengers = Number(document.getElementById('passengers').value || 1);
+
+  const est = estimateFare(drop, chargingType, rideType, passengers);
+  showFare(est, chargingType, rideType);
+};
+
+/* Show fare result */
+function showFare(est, chargingType, rideType){
+  document.getElementById('fareResult').style.display='block';
+  const el = document.getElementById('fareSummary');
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between">
+      <div>
+        <div class="small muted">Route</div>
+        <div style="font-weight:800">${est.drop} • ${est.dist} km</div>
+        <div class="muted small">Time: ${est.timeMin} min</div>
+      </div>
+      <div style="text-align:right">
+        <div class="small muted">Estimated Total</div>
+        <div class="big">${money(est.totalFare)}</div>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <div class="line"><div class="small muted">Base Fare</div><div>${money(est.base)}</div></div>
+      <div class="line"><div class="small muted">Distance (${est.dist} km)</div><div>${money(est.distanceCharge)}</div></div>
+      <div class="line"><div class="small muted">Time (${est.timeMin} min)</div><div>${money(est.timeCharge)}</div></div>
+      <div class="line"><div class="small muted">Tolls</div><div>${money(est.toll)}</div></div>
+      <div class="line"><div class="small muted">Charging (${chargingType})</div><div>${money(est.chargingCost)}</div></div>
+      <div class="line"><div class="small muted">Discount</div><div>${est.discountPct || 0}%</div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        <div class="small muted">Platform commission (${settings.commissionPercent}%)</div>
+        <div class="small">${money(est.commission)}</div>
+      </div>
+      <div style="margin-top:8px;font-weight:700">You pay: ${money(est.totalFare)}</div>
+    </div>
+  `;
+
+  const actions = document.getElementById('fareActions');
+  actions.innerHTML = '';
+  const bookBtn = document.createElement('button');
+  bookBtn.className = 'cta';
+  bookBtn.innerText = 'Book Ride';
+  bookBtn.onclick = ()=> startBooking(est, chargingType, rideType);
+  actions.appendChild(bookBtn);
+
+  const switchBtn = document.createElement('button');
+  switchBtn.className = 'sm-btn';
+  switchBtn.style.marginLeft='10px';
+  switchBtn.innerText = chargingType==='paid' ? 'Switch to Home Charging (Cheaper)' : 'Switch to Paid Charging (Public)';
+  switchBtn.onclick = ()=> {
+    document.getElementById('chargingType').value = chargingType==='paid' ? 'home' : 'paid';
+    document.getElementById('calcFareBtn').click();
+  }
+  actions.appendChild(switchBtn);
+}
+
+/* Fake driver pool (demo) */
+const demoDrivers = [
+  {id:1,name:'Rahul Singh',vehicle:'Tata Nexon EV',battery:98,rating:4.8},
+  {id:2,name:'Aarti Patel',vehicle:'MG ZS EV',battery:74,rating:4.7},
+  {id:3,name:'Vikram Rao',vehicle:'BYD Atto',battery:63,rating:4.6}
+];
+
+function startBooking(est, chargingType, rideType){
+  // assign a closest available demo driver randomly but prefer EV battery >= needed for intercity
+  const neededKwh = est.kWhNeeded;
+  const candidates = demoDrivers.filter(d=>d.battery>30); // demo filter
+  const driver = candidates[Math.floor(Math.random()*candidates.length)];
+
+  // create trip
+  const trip = {
+    id: 'T' + Date.now(),
+    drop: est.drop,
+    distance: est.dist,
+    timeMin: est.timeMin,
+    chargingType, rideType,
+    totalFare: est.totalFare,
+    commission: est.commission,
+    kWhNeeded: est.kWhNeeded,
+    driver,
+    status: 'CONFIRMED',
+    createdAt: new Date().toISOString()
+  };
+  demoState.trips.push(trip);
+  saveState();
+  assignTripToDriver(trip);
+  showBookingConfirmation(trip);
+  // update earning series
+  demoState.earningsSeries.push({label: new Date().toLocaleTimeString(), value: trip.totalFare});
+  saveState();
+  renderChart();
+}
+
+/* Show booking confirmation and begin simulated trip */
+function showBookingConfirmation(trip){
+  const flow = document.getElementById('bookingFlow');
+  flow.style.display='block';
+  flow.innerHTML = `
+    <div class="mini-card" style="display:flex;gap:12px;align-items:center">
+      <div style="flex:1">
+        <div style="font-weight:800">${trip.driver.name} • ${trip.driver.vehicle}</div>
+        <div class="muted small">Battery ${trip.driver.battery}% • Rating ${trip.driver.rating}</div>
+        <div style="margin-top:8px" class="small muted">Pickup in ~15 min • ETA ${trip.timeMin} min</div>
+      </div>
+      <div style="text-align:right">
+        <div class="small muted">Fare</div>
+        <div style="font-weight:800">${money(trip.totalFare)}</div>
+        <button class="sm-btn" id="payNow">Pay Now</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('payNow').onclick = ()=> proceedToPayment(trip);
+}
+
+/* Payment simulation */
+function proceedToPayment(trip){
+  const flow = document.getElementById('bookingFlow');
+  flow.innerHTML = `
+    <div style="display:grid;gap:8px">
+      <div class="small muted">Select payment method</div>
+      <div class="two-col">
+        <button class="sm-btn" id="payUpi">UPI</button>
+        <button class="sm-btn" id="payCard">Card</button>
+      </div>
+      <div style="margin-top:6px">
+        <div class="small muted">Or pay cash on arrival</div>
+      </div>
+      <div style="margin-top:10px">
+        <button class="cta" id="confirmPay">Simulate Pay ₹${trip.totalFare}</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('confirmPay').onclick = ()=>{
+    // mark trip as started and show active trip
+    trip.status = 'ONGOING'; trip.startedAt = new Date().toISOString();
+    demoState.trips = demoState.trips.map(t=> t.id===trip.id ? trip : t);
+    saveState();
+    beginSimulatedTrip(trip);
+  }
+}
+
+/* Simulated trip progress */
+let tripInterval = null;
+function beginSimulatedTrip(trip){
+  activeTrip = trip;
+  // show trip panel
+  document.getElementById('panel-trip').style.display = 'block';
+  updateActiveTripUI();
+
+  let progress = 0;
+  const increment = 100 / (trip.timeMin / 5); // update every 5 min equivalent scaled to demo
+  if(tripInterval) clearInterval(tripInterval);
+  tripInterval = setInterval(()=>{
+    progress += increment;
+    if(progress >= 100){
+      progress = 100;
+      endTripSimulation(trip);
+    }
+    document.getElementById('tripProgress').style.width = progress + '%';
+  }, 1000); // each second simulates 5 minutes - demo speed
+}
+
+/* End trip */
+function endTripSimulation(trip){
+  clearInterval(tripInterval);
+  trip.status = 'COMPLETED';
+  trip.endedAt = new Date().toISOString();
+  demoState.trips = demoState.trips.map(t=> t.id===trip.id ? trip : t);
+  // after completion, compute payouts & owner profit for display
+  computeAndShowTripPayout(trip);
+  activeTrip = null;
+  saveState();
+  document.getElementById('tripProgress').style.width = '100%';
+  document.getElementById('panel-trip').style.display = 'none';
+  alert('Trip completed! Fare settled.');
+}
+
+/* Payout & profit calculation and credit to driver / owner */
+function computeAndShowTripPayout(trip){
+  // Owner revenue is trip.totalFare - commission
+  const commission = trip.commission;
+  const platformCut = commission;
+  const ownerRevenue = round2(trip.totalFare - platformCut);
+
+  // For demo, if a vehicle is assigned from fleet (not implemented auto mapping), owner costs default
+  const ownerCosts = {
+    emiPerTrip: settings.estimatedTripsPerMonth ? ( (4500/settings.estimatedTripsPerMonth) ) : 150,
+    insurancePerTrip: settings.estimatedTripsPerMonth ? ( (1200/settings.estimatedTripsPerMonth) ) : 40,
+    driverSalary: settings.defaultDriverSalaryPerDay
+  };
+  // Charging & tolls:
+  const chargingCost = round2(trip.kWhNeeded * (trip.chargingType==='home' ? settings.homeRate : settings.paidRate));
+  const tolls = routeMeta[trip.drop].toll;
+
+  const totalOwnerCosts = round2(ownerCosts.emiPerTrip + ownerCosts.insurancePerTrip + ownerCosts.driverSalary + chargingCost + tolls);
+  const ownerProfit = round2(ownerRevenue - totalOwnerCosts);
+
+  // Credit driver earnings (simplified): driver gets driverSalary and percentage of remainder
+  const driverEarnings = ownerCosts.driverSalary;
+
+  // Save as an earnings record
+  demoState.driverExpenses.push({when:new Date().toISOString(), type:'trip_charging', amount: chargingCost});
+  demoState.trips = demoState.trips.map(t => t.id === trip.id ? {...t, payout:{
+    platformCut, ownerRevenue, ownerCosts: totalOwnerCosts, ownerProfit, driverEarnings
+  }} : t);
+  saveState();
+  renderFleetTable();
+  renderDriverExpenses();
+  renderChart();
+
+  // Show a modal-like alert with P&L
+  setTimeout(()=> {
+    alert(`Trip settled.\nTotal Fare: ${money(trip.totalFare)}\nPlatform cut: ${money(platformCut)}\nOwner revenue: ${money(ownerRevenue)}\nOwner costs (pay + EMI + insurance + charging + tolls): ${money(totalOwnerCosts)}\nOwner profit: ${money(ownerProfit)}\nDriver earned (fixed): ${money(driverEarnings)}`);
+  },100);
+}
+
+/* Assign trip to demo driver (increase driver's trip count & earnings) */
+function assignTripToDriver(trip){
+  // For demo, increment driver earnings & count
+  document.getElementById('drvTripsCount').innerText = Number(document.getElementById('drvTripsCount').innerText || 0) + 1;
+  const current = Number(document.getElementById('drvEarnings').innerText.replace('₹','').replace(/,/g,'')) || 0;
+  document.getElementById('drvEarnings').innerText = money(current + trip.totalFare*0.5); // driver preview
+}
+
+/* ===== Driver expense logging ===== */
+document.getElementById('logExpenseBtn').onclick = ()=>{
+  const type = document.getElementById('expType').value || 'other';
+  const amt = Number(document.getElementById('expAmount').value) || 0;
+  demoState.driverExpenses.push({when:new Date().toISOString(), type, amount:amt});
+  saveState();
+  renderDriverExpenses();
+  document.getElementById('expType').value=''; document.getElementById('expAmount').value='';
+};
+
+function renderDriverExpenses(){
+  const tbody = document.querySelector('#drvExpenseTable tbody');
+  tbody.innerHTML = '';
+  demoState.driverExpenses.slice().reverse().forEach(e=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${e.type}</td><td>${money(e.amount)}</td><td class="small muted">${new Date(e.when).toLocaleString()}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ===== Fleet vehicle controls ===== */
+document.getElementById('addVehicleBtn').onclick = ()=>{
+  const name = document.getElementById('fleet_vehicle_name').value || ('Vehicle ' + (demoState.vehicles.length+1));
+  const emi = Number(document.getElementById('fleet_emi').value) || 0;
+  const ins = Number(document.getElementById('fleet_ins').value) || 0;
+  demoState.vehicles.push({id:'V'+Date.now(), name, emiMonthly:emi, insuranceYearly:ins, trips:[]});
+  saveState();
+  renderFleetTable();
+  document.getElementById('fleet_vehicle_name').value='';
+};
+
+function renderFleetTable(){
+  const tbody = document.querySelector('#fleetTable tbody');
+  tbody.innerHTML = '';
+  demoState.vehicles.forEach(v=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${v.name}</td><td>${money(v.emiMonthly)}</td><td>${money(v.insuranceYearly)}</td>
+      <td>
+        <button class="sm-btn" onclick="simulateAssignVehicle('${v.id}')">Assign Trip</button>
+        <button class="sm-btn" onclick="viewVehiclePnl('${v.id}')">P&L</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* Assign a recently completed trip to a vehicle (demo) */
+window.simulateAssignVehicle = function(vehicleId){
+  if(demoState.trips.length===0){ alert('No trips yet. Book a trip first.'); return; }
+  // pick last trip and attach to vehicle
+  const last = demoState.trips.slice(-1)[0];
+  const veh = demoState.vehicles.find(v=>v.id===vehicleId);
+  if(!veh) return;
+  veh.trips = veh.trips || [];
+  veh.trips.push(last.id);
+  saveState();
+  alert('Assigned last trip to ' + veh.name + '. Now view P&L.');
+  renderFleetTable();
+}
+
+/* Compute and view P&L per vehicle */
+window.viewVehiclePnl = function(vehicleId){
+  const v = demoState.vehicles.find(x=>x.id===vehicleId);
+  if(!v) return alert('Vehicle not found');
+  // compute totals across assigned trips
+  const tripRecords = (v.trips||[]).map(id => demoState.trips.find(t=>t.id===id)).filter(Boolean);
+  if(tripRecords.length===0) return alert('No trips assigned to this vehicle yet.');
+  let revenue=0, platform=0, charging=0, tolls=0, driverPay=0;
+  tripRecords.forEach(t=>{
+    revenue += t.totalFare;
+    platform += t.commission;
+    charging += (t.kWhNeeded * (t.chargingType==='home' ? settings.homeRate : settings.paidRate));
+    tolls += routeMeta[t.drop].toll;
+    driverPay += settings.defaultDriverSalaryPerDay;
+  });
+  // EMI & insurance allocation
+  const emiPerTrip = (v.emiMonthly || 0) / (settings.estimatedTripsPerMonth || 20);
+  const insurancePerTrip = (v.insuranceYearly || 0) / 12 / (settings.estimatedTripsPerMonth || 20);
+  const totalTrips = tripRecords.length;
+  const totalEmi = round2(emiPerTrip * totalTrips);
+  const totalIns = round2(insurancePerTrip * totalTrips);
+
+  const ownerRevenue = revenue - platform;
+  const ownerCosts = round2(totalEmi + totalIns + driverPay*totalTrips + charging + tolls);
+  const ownerProfit = round2(ownerRevenue - ownerCosts);
+
+  alert(`P&L for ${v.name}:
+Trips: ${totalTrips}
+Total fare revenue: ${money(revenue)}
+Platform cut: ${money(platform)}
+Owner revenue after platform: ${money(ownerRevenue)}
+Costs: EMI(${money(totalEmi)}), Insurance(${money(totalIns)}), DriverPay(${money(driverPay*totalTrips)}), Charging(${money(round2(charging))}), Tolls(${money(tolls)})
+Owner profit: ${money(ownerProfit)}
+  `);
+}
+
+/* ===== Admin panel persistence ===== */
+/* Create admin controls in a modal-like fashion inside the right column: we'll persist settings when user modifies via console or via nav */
+(function createAdminPanel(){
+  const adminTab = document.querySelector('[data-tab="admin"]');
+  adminTab.onclick = ()=> {
+    // open an inline admin editor using prompt-style (simple)
+    const newBase = Number(prompt('Base fare (₹):', settings.baseFare));
+    if(isNaN(newBase)) return;
+    const newPerKm = Number(prompt('Per km (₹):', settings.perKm));
+    const newPerMin = Number(prompt('Per min (₹):', settings.perMin));
+    const newCommission = Number(prompt('Platform commission %:', settings.commissionPercent));
+    const newHome = Number(prompt('Home charging ₹/kWh:', settings.homeRate));
+    const newPaid = Number(prompt('Paid charging ₹/kWh:', settings.paidRate));
+    settings.baseFare=newBase; settings.perKm=newPerKm; settings.perMin=newPerMin; settings.commissionPercent=newCommission; settings.homeRate=newHome; settings.paidRate=newPaid;
+    saveState();
+    document.getElementById('ui_baseFare').value = settings.baseFare;
+    document.getElementById('ui_perKm').value = settings.perKm;
+    document.getElementById('ui_perMin').value = settings.perMin;
+    document.getElementById('ui_commission').value = settings.commissionPercent;
+    document.getElementById('ui_homeRate').value = settings.homeRate;
+    document.getElementById('ui_paidRate').value = settings.paidRate;
+    alert('Admin settings saved (localStorage).');
+  };
+})();
+
+/* ===== Chart rendering ===== */
+let chart = null;
+function renderChart(){
+  const ctx = document.getElementById('earnChart').getContext('2d');
+  const labels = demoState.earningsSeries.map(s=>s.label);
+  const data = demoState.earningsSeries.map(s=>s.value);
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Demo Revenue (₹)',
+        data,
+        fill:true,
+        tension:0.3,
+        borderColor:'#22c55e',
+        backgroundColor:'rgba(34,197,94,0.08)',
+        pointRadius:3
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+/* ===== Render persisted state on load ===== */
+function init(){
+  renderFleetTable();
+  renderDriverExpenses();
+  renderChart();
+}
+init();
+
+/* Update active trip UI */
+function updateActiveTripUI(){
+  if(!activeTrip) return;
+  document.getElementById('activeTripInfo').innerHTML = `
+    <div style="font-weight:800">${activeTrip.driver.name} • ${activeTrip.driver.vehicle}</div>
+    <div class="muted small">Route: Ganganagar → ${activeTrip.drop} • Fare ${money(activeTrip.totalFare)}</div>
+  `;
+  document.getElementById('tripControls').innerHTML = `<button class="danger" onclick="cancelActiveTrip()">Cancel Trip</button>`;
+}
+
+/* Cancel trip (demo) */
+window.cancelActiveTrip = function(){
+  if(!activeTrip) return alert('No active trip');
+  if(!confirm('Cancel active trip? This will refund demo payment and mark trip cancelled.')) return;
+  activeTrip.status='CANCELLED';
+  demoState.trips = demoState.trips.map(t=> t.id===activeTrip.id ? activeTrip : t);
+  activeTrip = null;
+  saveState();
+  document.getElementById('panel-trip').style.display='none';
+  alert('Trip cancelled (demo).');
+}
+
+/* Helpful: render on load any persisted trips count */
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('[data-tab]').forEach(t=>{
+    if(t.dataset.tab==='rider') t.classList.add('active');
+    else t.classList.remove('active');
+  });
+  // update trips count
+  document.getElementById('drvTripsCount').innerText = demoState.trips.length;
+});
+
+</script>
+</body>
+</html>
